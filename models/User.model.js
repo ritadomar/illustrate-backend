@@ -28,8 +28,8 @@ const userSchema = new Schema(
     isArtist: Boolean,
     rate: Number,
     artwork: [{ type: Schema.Types.ObjectId, ref: 'Artwork' }],
-    commissions: [{ type: Schema.Types.ObjectId, ref: 'Commissions' }],
-    requests: [{ type: Schema.Types.ObjectId, ref: 'Requests' }],
+    commissions: [{ type: Schema.Types.ObjectId, ref: 'Commission' }],
+    requests: [{ type: Schema.Types.ObjectId, ref: 'Request' }],
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`

@@ -5,7 +5,7 @@ const requestSchema = new Schema(
   {
     artist: { type: Schema.Types.ObjectId, ref: 'User' },
     buyer: { type: Schema.Types.ObjectId, ref: 'User' },
-    commission: { type: Schema.Types.ObjectId, ref: 'Requests' },
+    commission: { type: Schema.Types.ObjectId, ref: 'Commission' },
     description: {
       type: String,
       required: [

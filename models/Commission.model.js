@@ -12,7 +12,7 @@ const commissionSchema = new Schema(
     exampleArtwork: [{ type: Schema.Types.ObjectId, ref: 'Artwork' }],
     artist: { type: Schema.Types.ObjectId, ref: 'User' },
     cost: Number,
-    requests: [{ type: Schema.Types.ObjectId, ref: 'Requests' }],
+    requests: [{ type: Schema.Types.ObjectId, ref: 'Request' }],
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`
