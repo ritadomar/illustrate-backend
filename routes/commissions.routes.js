@@ -3,7 +3,6 @@ const Artwork = require('../models/Artwork.model');
 const Artist = require('../models/User.model');
 const Commission = require('../models/Commission.model');
 const mongoose = require('mongoose');
-const fileUploader = require('../config/cloudinary.config');
 const { checkArtist } = require('../middleware/artistCheck.middleware');
 const { isAuthenticated } = require('../middleware/jwt.middleware');
 
@@ -64,18 +63,18 @@ router.post(
 // Read all commissions
 router.get('/commissions', async (req, res, next) => {
   try {
-    const allArtworks = await Artwork.find({});
+    const allCommissions = await Commission.find({});
 
-    console.log('All artworks', allArtworks);
-    res.json(allArtworks);
+    console.log('All commissions', allCommissions);
+    res.json(allCommissions);
   } catch (error) {
     console.log('An error ocurred getting all artworks', error);
     next(error);
   }
 });
 
-// Read one artwork by id
-router.get('/artworks/:id', async (req, res, next) => {
+// Read one commission by id
+router.get('/commissions/:id', async (req, res, next) => {
   const { id } = req.params;
 
   try {
@@ -84,70 +83,64 @@ router.get('/artworks/:id', async (req, res, next) => {
       return res.status(400).json({ message: 'Id is not valid' });
     }
 
-    const artwork = await Artwork.findById(id).populate('commissions');
+    const commission = await Commission.findById(id).populate('exampleArtwork');
 
-    if (!artwork) {
-      return res.status(404).json({ message: 'No artwork found' });
+    if (!commission) {
+      return res.status(404).json({ message: 'No commission found' });
     }
-    res.json(artwork);
+    res.json(commission);
   } catch (error) {
-    console.log('An error ocurred getting the artwork', error);
+    console.log('An error ocurred getting the commission', error);
     next(error);
   }
 });
 
-// Update artwork by id
-router.put('/artworks/:id', async (req, res, next) => {
+// Update commission by id
+router.put('/commissions/:id', async (req, res, next) => {
   const { id } = req.params;
-  const { title, description, artworkUrl, tags, time, commissionId } = req.body;
+  const { title, description, tags, exampleArtwork, artistId } = req.body;
 
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Id is not valid' });
     }
 
-    // if (commissionId) {
-    //   const commissionExists = await Artwork.findById(id, {
-    //     commissions: commissionId,
-    //   });
+    const costArray = await Artwork.find(
+      { _id: { $in: exampleArtwork } },
+      'cost -_id'
+    );
 
-    //   if (!commissionExists) {
-    //     const artworkCommissions = Artwork.findById(id, 'commissions -_id');
-    //     artworkCommissions.commissions.push(commissionId);
-    //   }
-    // }
+    const cost =
+      costArray.reduce((acc, cur) => {
+        return acc + cur.cost;
+      }, 0) / costArray.length;
 
-    const artistId = await Artwork.findById(id, 'artist -_id');
-    const artist = await Artist.findById(artistId.artist, 'rate -_id');
-
-    console.log(artist);
-    const cost = time * artist.rate;
-
-    const updatedArtwork = await Artwork.findByIdAndUpdate(
+    const updatedCommission = await Commission.findByIdAndUpdate(
       id,
       {
         title,
         description,
-        artworkUrl,
         tags,
-        time,
+        exampleArtwork,
         cost,
+        artist: artistId,
       },
       { new: true }
-    ).populate('commissions');
+    ).populate('exampleArtwork');
 
-    if (!updatedArtwork) {
-      return res.status(404).json({ message: 'Artwork not found' });
+    if (!updatedCommission) {
+      return res.status(404).json({ message: 'Commission not found' });
     }
 
-    res.json(updatedArtwork);
+    res.json(updatedCommission);
   } catch (error) {
-    console.log('An error ocurred updating the artwork', error);
+    console.log('An error ocurred updating the commission', error);
     next(error);
   }
 });
 
-router.delete('/artworks/:id', async (req, res, next) => {
+// Delete commission
+router.delete('/commissions/:id', async (req, res, next) => {
   const { id } = req.params;
 
   try {
@@ -156,30 +149,20 @@ router.delete('/artworks/:id', async (req, res, next) => {
     }
 
     // delete from artist
-    const artist = await Artwork.findById(id, 'artist -_id');
+    const artist = await Commission.findById(id, 'artist -_id');
+    console.log(artist);
     const artistId = artist.artist.toString();
-    await Artist.findByIdAndUpdate(artistId, { $pull: { artwork: id } });
+    await Artist.findByIdAndUpdate(artistId, { $pull: { commissions: id } });
 
     // delete from commission
-    await Commission.updateMany({ $pull: { exampleArtwork: id } });
+    await Artwork.updateMany({ $pull: { commissions: id } });
 
-    await Artwork.findByIdAndDelete(id);
+    await Commission.findByIdAndDelete(id);
 
-    res.json({ message: 'Artwork deleted successfully' });
+    res.json({ message: 'Commission deleted successfully' });
   } catch (error) {
     console.log('An error occurred deleting the artwork', error);
     next(error);
-  }
-});
-
-// promise is handled by the middleware, we don't need async
-// we're sending a status already, no need for next
-router.post('/upload', fileUploader.single('file'), (req, res) => {
-  try {
-    res.status(200).json({ artworkUrl: req.file.path });
-  } catch (error) {
-    console.log('An error occurred uploading the image', error);
-    res.status(500).json({ message: 'An error occurred' });
   }
 });
 
