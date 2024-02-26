@@ -25,6 +25,8 @@ const profilesRoutes = require('./routes/profiles.routes');
 app.use('/api', profilesRoutes);
 const artworksRoutes = require('./routes/artworks.routes');
 app.use('/api', artworksRoutes);
+const commissionsRoutes = require('./routes/commissions.routes');
+app.use('/api', commissionsRoutes);
 
 // auth routes
 const authRoutes = require('./routes/auth.routes');

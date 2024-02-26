@@ -10,8 +10,8 @@ const commissionSchema = new Schema(
     description: String,
     tags: [{ type: String }],
     exampleArtwork: [{ type: Schema.Types.ObjectId, ref: 'Artwork' }],
-    artist: { type: Schema.Types.ObjectId, ref: 'User' },
     cost: Number,
+    artist: { type: Schema.Types.ObjectId, ref: 'User' },
     requests: [{ type: Schema.Types.ObjectId, ref: 'Request' }],
   },
   {

@@ -26,6 +26,7 @@ router.post(
     try {
       const artist = await Artist.findById(artistId, 'rate -_id');
 
+      console.log(artist, artist.rate);
       const cost = time * artist.rate;
 
       const newArtwork = await Artwork.create({
