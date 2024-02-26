@@ -8,12 +8,15 @@ const artworkSchema = new Schema(
       required: [true, 'Title is required.'],
     },
     description: String,
-    artworkUrl: String,
+    artworkUrl: {
+      type: String,
+      required: [true, 'Image is required'],
+    },
     tags: [{ type: String }],
     time: Number,
     cost: Number,
     artist: { type: Schema.Types.ObjectId, ref: 'User' },
-    commissions: { type: Schema.Types.ObjectId, ref: 'Commission' },
+    commissions: [{ type: Schema.Types.ObjectId, ref: 'Commission' }],
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`

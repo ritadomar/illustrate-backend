@@ -23,6 +23,8 @@ const artistsRoutes = require('./routes/artists.routes');
 app.use('/api', artistsRoutes);
 const profilesRoutes = require('./routes/profiles.routes');
 app.use('/api', profilesRoutes);
+const artworksRoutes = require('./routes/artworks.routes');
+app.use('/api', artworksRoutes);
 
 // auth routes
 const authRoutes = require('./routes/auth.routes');
