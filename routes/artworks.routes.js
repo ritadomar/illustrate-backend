@@ -62,7 +62,7 @@ router.post(
   }
 );
 
-// Read all projects
+// Read all artworks
 router.get('/artworks', async (req, res, next) => {
   try {
     const allArtworks = await Artwork.find({});
@@ -107,23 +107,20 @@ router.put('/artworks/:id', async (req, res, next) => {
       return res.status(400).json({ message: 'Id is not valid' });
     }
 
-    // if (commissionId) {
-    //   const commissionExists = await Artwork.findById(id, {
-    //     commissions: commissionId,
-    //   });
-
-    //   if (!commissionExists) {
-    //     const artworkCommissions = Artwork.findById(id, 'commissions -_id');
-    //     artworkCommissions.commissions.push(commissionId);
-    //   }
-    // }
-
     const artistId = await Artwork.findById(id, 'artist -_id');
     const artist = await Artist.findById(artistId.artist, 'rate -_id');
 
-    console.log(artist);
     const cost = time * artist.rate;
 
+    // const commissionExists = await Artwork.find({
+    //   commissions: commissionId,
+    // });
+
+    // if (commissionExists) {
+    //   const commissionsArr = await Artwork.findById(id, 'commissions -_id');
+    //   commissionsArr.push(commissionId);
+    //   console.log(commissionsArr);
+    // }
     const updatedArtwork = await Artwork.findByIdAndUpdate(
       id,
       {
@@ -133,6 +130,7 @@ router.put('/artworks/:id', async (req, res, next) => {
         tags,
         time,
         cost,
+        $push: { commissions: commissionId },
       },
       { new: true }
     ).populate('commissions');
