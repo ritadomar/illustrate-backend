@@ -20,7 +20,7 @@ router.post(
       tags,
       time,
       artistId,
-      commissionId,
+      commissions,
     } = req.body;
 
     try {
@@ -37,7 +37,7 @@ router.post(
         time,
         cost,
         artist: artistId,
-        $push: { commissions: commissionId },
+        commissions,
       });
 
       await Artist.findByIdAndUpdate(artistId, {
@@ -45,12 +45,12 @@ router.post(
         // $push: {name of property we are pushing to: what we are pushing}
         $push: { artwork: newArtwork._id },
       });
-      if (commissionId) {
-        await Commission.findByIdAndUpdate(commissionId, {
-          // Mongo syntax to .push()
-          // $push: {name of property we are pushing to: what we are pushing}
-          $push: { exampleArtwork: newArtwork._id },
-        });
+
+      if (commissions) {
+        await Commission.updateMany(
+          { _id: { $in: commissions } },
+          { $addToSet: { exampleArtwork: newArtwork._id } }
+        );
       }
 
       console.log('New artwork', newArtwork);
@@ -100,7 +100,7 @@ router.get('/artworks/:id', async (req, res, next) => {
 // Update artwork by id
 router.put('/artworks/:id', async (req, res, next) => {
   const { id } = req.params;
-  const { title, description, artworkUrl, tags, time, commissionId } = req.body;
+  const { title, description, artworkUrl, tags, time, commissions } = req.body;
 
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -112,15 +112,17 @@ router.put('/artworks/:id', async (req, res, next) => {
 
     const cost = time * artist.rate;
 
-    // const commissionExists = await Artwork.find({
-    //   commissions: commissionId,
-    // });
+    if (commissions) {
+      await Commission.updateMany(
+        { _id: { $nin: commissions } },
+        { $pull: { exampleArtwork: id } }
+      );
+      await Commission.updateMany(
+        { _id: { $in: commissions } },
+        { $addToSet: { exampleArtwork: id } }
+      );
+    }
 
-    // if (commissionExists) {
-    //   const commissionsArr = await Artwork.findById(id, 'commissions -_id');
-    //   commissionsArr.push(commissionId);
-    //   console.log(commissionsArr);
-    // }
     const updatedArtwork = await Artwork.findByIdAndUpdate(
       id,
       {
@@ -130,7 +132,7 @@ router.put('/artworks/:id', async (req, res, next) => {
         tags,
         time,
         cost,
-        $push: { commissions: commissionId },
+        commissions,
       },
       { new: true }
     ).populate('commissions');
