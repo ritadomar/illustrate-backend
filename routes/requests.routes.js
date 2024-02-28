@@ -1,78 +1,69 @@
 const router = require('express').Router();
-const Artwork = require('../models/Artwork.model');
-const Artist = require('../models/User.model');
+const User = require('../models/User.model');
 const Commission = require('../models/Commission.model');
+const Request = require('../models/Request.model');
 const mongoose = require('mongoose');
-const { checkArtist } = require('../middleware/artistCheck.middleware');
-const { isAuthenticated } = require('../middleware/jwt.middleware');
 
-// Create a new commission
-router.post(
-  '/commissions',
-  isAuthenticated,
-  checkArtist,
-  async (req, res, next) => {
-    const { title, description, tags, exampleArtwork, artistId } = req.body;
+// Create a new request
+router.post('/requests', async (req, res, next) => {
+  const { buyer, commission, description } = req.body;
 
-    try {
-      const costArray = await Artwork.find(
-        { _id: { $in: exampleArtwork } },
-        'cost -_id'
-      );
-
-      const cost =
-        costArray.reduce((acc, cur) => {
-          return acc + cur.cost;
-        }, 0) / costArray.length;
-
-      const newCommission = await Commission.create({
-        title,
-        description,
-        tags,
-        exampleArtwork,
-        cost,
-        artist: artistId,
-      });
-
-      await Artist.findByIdAndUpdate(artistId, {
-        // Mongo syntax to .push()
-        // $push: {name of property we are pushing to: what we are pushing}
-        $push: { commissions: newCommission._id },
-      });
-
-      if (exampleArtwork) {
-        await Artwork.updateMany(
-          { _id: { $in: exampleArtwork } },
-          { $addToSet: { commissions: newCommission._id } }
-        );
-      }
-
-      console.log('New artwork', newCommission);
-      //   res.status(201).json({ message: 'Successful' });
-      res.status(201).json(newCommission);
-    } catch (error) {
-      console.log('An error ocurred creating the artwork', error);
-      next(error);
-    }
-  }
-);
-
-// Read all commissions
-router.get('/commissions', async (req, res, next) => {
   try {
-    const allCommissions = await Commission.find({});
+    const artistId = await Commission.findById(commission, 'artist -_id');
+    const artist = artistId.artist.toString();
+    console.log('artist', artist);
+    const newRequest = await Request.create({
+      artist,
+      buyer,
+      commission,
+      description,
+    });
 
-    console.log('All commissions', allCommissions);
-    res.json(allCommissions);
+    await User.findByIdAndUpdate(artist, {
+      $push: { requests: newRequest._id },
+    });
+
+    await User.findByIdAndUpdate(buyer, {
+      $push: { requests: newRequest._id },
+    });
+
+    await Commission.findByIdAndUpdate(commission, {
+      $push: { requests: newRequest._id },
+    });
+
+    console.log('New request', newRequest);
+    //   res.status(201).json({ message: 'Successful' });
+    res.status(201).json(newRequest);
   } catch (error) {
-    console.log('An error ocurred getting all artworks', error);
+    console.log('An error ocurred creating the request', error);
     next(error);
   }
 });
 
-// Read one commission by id
-router.get('/commissions/:id', async (req, res, next) => {
+// Read all requests
+router.get('/requests', async (req, res, next) => {
+  const { userId } = req.body;
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Id is not valid' });
+    }
+    const allRequests = await Request.find({
+      $or: [{ artist: userId }, { buyer: userId }],
+    });
+
+    console.log('All requests', allRequests);
+    res.json(allRequests);
+  } catch (error) {
+    console.log('An error ocurred getting all requests', error);
+    next(error);
+  }
+});
+
+// Read one request by id
+router.get('/requests/:id', async (req, res, next) => {
   const { id } = req.params;
+  const { userId } = req.body;
 
   try {
     // check if id is a valid value in our db
@@ -80,76 +71,76 @@ router.get('/commissions/:id', async (req, res, next) => {
       return res.status(400).json({ message: 'Id is not valid' });
     }
 
-    const commission = await Commission.findById(id).populate('exampleArtwork');
+    const request = await Request.findById(id).populate(
+      'artist buyer commission'
+    );
+    console.log(request);
 
-    if (!commission) {
-      return res.status(404).json({ message: 'No commission found' });
+    if (!request) {
+      return res.status(404).json({ message: 'No request found' });
     }
-    res.json(commission);
+
+    if (
+      request.artist._id.toString() !== userId &&
+      request.buyer._id.toString() !== userId
+    ) {
+      return res
+        .status(401)
+        .json({ message: 'You do not have access to this request' });
+    }
+    res.json(request);
   } catch (error) {
-    console.log('An error ocurred getting the commission', error);
+    console.log('An error ocurred getting the request', error);
     next(error);
   }
 });
 
-// Update commission by id
-router.put('/commissions/:id', async (req, res, next) => {
+// Update request by id
+router.put('/requests/:id', async (req, res, next) => {
   const { id } = req.params;
-  const { title, description, tags, exampleArtwork, artistId } = req.body;
+  const { status, userId } = req.body;
 
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Id is not valid' });
     }
 
-    const costArray = await Artwork.find(
-      { _id: { $in: exampleArtwork } },
-      'cost -_id'
+    const request = await Request.findById(id).populate(
+      'artist buyer commission'
     );
 
-    const cost =
-      costArray.reduce((acc, cur) => {
-        return acc + cur.cost;
-      }, 0) / costArray.length;
-
-    if (exampleArtwork) {
-      await Artwork.updateMany(
-        { _id: { $nin: exampleArtwork } },
-        { $pull: { commissions: id } }
-      );
-      await Artwork.updateMany(
-        { _id: { $in: exampleArtwork } },
-        { $addToSet: { commissions: id } }
-      );
+    if (
+      request.artist._id.toString() !== userId &&
+      request.buyer._id.toString() !== userId
+    ) {
+      return res
+        .status(401)
+        .json({ message: 'You do not have access to this request' });
     }
 
-    const updatedCommission = await Commission.findByIdAndUpdate(
+    const updatedRequest = await Request.findByIdAndUpdate(
       id,
       {
-        title,
-        description,
-        tags,
-        exampleArtwork,
-        cost,
-        artist: artistId,
+        status,
       },
       { new: true }
-    ).populate('exampleArtwork');
+    ).populate('artist buyer commission');
 
-    if (!updatedCommission) {
-      return res.status(404).json({ message: 'Commission not found' });
+    if (!updatedRequest) {
+      return res.status(404).json({ message: 'Request not found' });
     }
 
-    res.json(updatedCommission);
+    res.json(updatedRequest);
   } catch (error) {
-    console.log('An error ocurred updating the commission', error);
+    console.log('An error ocurred updating the request', error);
     next(error);
   }
 });
 
 // Delete commission
-router.delete('/commissions/:id', async (req, res, next) => {
+router.delete('/requests/:id', async (req, res, next) => {
   const { id } = req.params;
+  const { userId } = req.body;
 
   try {
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -157,19 +148,27 @@ router.delete('/commissions/:id', async (req, res, next) => {
     }
 
     // delete from artist
-    const artist = await Commission.findById(id, 'artist -_id');
-    console.log(artist);
+    const artist = await Request.findById(id, 'artist -_id');
     const artistId = artist.artist.toString();
-    await Artist.findByIdAndUpdate(artistId, { $pull: { commissions: id } });
+    await User.findByIdAndUpdate(artistId, { $pull: { requests: id } });
 
+    const buyer = await Request.findById(id, 'buyer -_id');
+    const buyerId = buyer.buyer.toString();
+    await User.findByIdAndUpdate(buyerId, { $pull: { requests: id } });
+
+    if (artistId !== userId && buyerId !== userId) {
+      return res
+        .status(401)
+        .json({ message: 'You do not have access to this request' });
+    }
     // delete from commission
-    await Artwork.updateMany({ $pull: { commissions: id } });
+    await Commission.updateMany({ $pull: { requests: id } });
 
-    await Commission.findByIdAndDelete(id);
+    await Request.findByIdAndDelete(id);
 
-    res.json({ message: 'Commission deleted successfully' });
+    res.json({ message: 'Request deleted successfully' });
   } catch (error) {
-    console.log('An error occurred deleting the artwork', error);
+    console.log('An error occurred deleting the request', error);
     next(error);
   }
 });

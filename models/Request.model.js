@@ -13,7 +13,11 @@ const requestSchema = new Schema(
         'Description is required. Please provide as much useful information about the specs of the project, including size, purpose, media, and deadline',
       ],
     },
-    status: { type: String, enum: ['pending', 'approved', 'rejected'] },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`

@@ -47,7 +47,7 @@ router.post(
         );
       }
 
-      console.log('New artwork', newCommission);
+      console.log('New commission', newCommission);
       //   res.status(201).json({ message: 'Successful' });
       res.status(201).json(newCommission);
     } catch (error) {
@@ -158,7 +158,6 @@ router.delete('/commissions/:id', async (req, res, next) => {
 
     // delete from artist
     const artist = await Commission.findById(id, 'artist -_id');
-    console.log(artist);
     const artistId = artist.artist.toString();
     await Artist.findByIdAndUpdate(artistId, { $pull: { commissions: id } });
 
@@ -169,7 +168,7 @@ router.delete('/commissions/:id', async (req, res, next) => {
 
     res.json({ message: 'Commission deleted successfully' });
   } catch (error) {
-    console.log('An error occurred deleting the artwork', error);
+    console.log('An error occurred deleting the commission', error);
     next(error);
   }
 });
