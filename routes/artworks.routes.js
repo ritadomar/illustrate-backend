@@ -25,10 +25,13 @@ router.post(
     } = req.body;
 
     try {
+      // finding the artist
       const artist = await Artist.findById(artistId, 'rate -_id');
 
+      // calculating artwork cost
       const cost = time * artist.rate;
 
+      // TAGS CREATION
       if (tags.length > 0) {
         // find existing tags
         const findTags = await Tag.find({ tagName: tags });
@@ -55,6 +58,7 @@ router.post(
         }
       }
 
+      // creating array to add tags to new artwork
       const artworkTagsArr = await Tag.find({ tagName: tags });
       const artworkTags = artworkTagsArr.map(tag => {
         return tag._id;
@@ -69,21 +73,22 @@ router.post(
         artist: artistId,
         commissions,
         tags: artworkTags,
-        // $addToSet: { tags: { $each: artworkTagsArray } },
       });
 
+      // adding new artwork to artist
       await Artist.findByIdAndUpdate(artistId, {
-        // Mongo syntax to .push()
-        // $push: {name of property we are pushing to: what we are pushing}
         $push: { artwork: newArtwork._id },
       });
 
+      // adding new artwork to tags
       if (tags.length > 0) {
         await Tag.updateMany(
           { tagName: { $in: tags } },
           { $addToSet: { artwork: newArtwork._id } }
         );
       }
+
+      // adding new artwork to commissions
       if (commissions) {
         await Commission.updateMany(
           { _id: { $in: commissions } },
@@ -118,7 +123,6 @@ router.get('/artworks/:id', async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    // check if id is a valid value in our db
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: 'Id is not valid' });
     }
@@ -153,11 +157,14 @@ router.put(
         return res.status(400).json({ message: 'Id is not valid' });
       }
 
+      // finding artist and rate
       const artistId = await Artwork.findById(id, 'artist -_id');
       const artist = await Artist.findById(artistId.artist, 'rate -_id');
 
+      // calculating new cost if time was updated
       const cost = time * artist.rate;
 
+      // CREATING TAGS
       if (tags.length > 0) {
         // find existing tags
         const findTags = await Tag.find({ tagName: tags });
@@ -183,6 +190,7 @@ router.put(
           await Tag.create(newTags);
         }
 
+        // UPDATING TAGS
         const artworkTagsArr = await Tag.find({ tagName: tags });
         const tagsId = artworkTagsArr.map(tag => {
           return tag._id;
@@ -198,11 +206,13 @@ router.put(
         );
       }
 
+      // creating new tags array to send to updated artwork
       const artworkTagsArr = await Tag.find({ tagName: tags });
       const artworkTags = artworkTagsArr.map(tag => {
         return tag._id;
       });
 
+      // updating commissions in case commission was added or removed from artwork
       if (commissions) {
         await Commission.updateMany(
           { _id: { $nin: commissions } },
@@ -260,8 +270,10 @@ router.delete(
       // delete from commission
       await Commission.updateMany({ $pull: { exampleArtwork: id } });
 
+      // delete from tags
       await Tag.updateMany({ $pull: { artwork: id } });
 
+      // delete artwork
       await Artwork.findByIdAndDelete(id);
 
       res.json({ message: 'Artwork deleted successfully' });

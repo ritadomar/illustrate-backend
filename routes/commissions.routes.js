@@ -16,6 +16,7 @@ router.post(
     const { title, description, tags, exampleArtwork, artistId } = req.body;
 
     try {
+      // calculating commission cost
       const costArray = await Artwork.find(
         { _id: { $in: exampleArtwork } },
         'cost -_id'
@@ -26,6 +27,7 @@ router.post(
           return acc + cur.cost;
         }, 0) / costArray.length;
 
+      // TAGS CREATION
       if (tags.length > 0) {
         // find existing tags
         const findTags = await Tag.find({ tagName: tags });
@@ -52,6 +54,7 @@ router.post(
         }
       }
 
+      // creating array to add tags to new commission
       const commissionTagsArr = await Tag.find({ tagName: tags });
       const commissionTags = commissionTagsArr.map(tag => {
         return tag._id;
@@ -66,12 +69,12 @@ router.post(
         artist: artistId,
       });
 
+      // adding new commission to artist
       await Artist.findByIdAndUpdate(artistId, {
-        // Mongo syntax to .push()
-        // $push: {name of property we are pushing to: what we are pushing}
         $push: { commissions: newCommission._id },
       });
 
+      // adding new commission to tags
       if (tags.length > 0) {
         await Tag.updateMany(
           { tagName: { $in: tags } },
@@ -79,6 +82,7 @@ router.post(
         );
       }
 
+      // adding new commission to artwork
       if (exampleArtwork) {
         await Artwork.updateMany(
           { _id: { $in: exampleArtwork } },
@@ -148,6 +152,7 @@ router.put(
         return res.status(400).json({ message: 'Id is not valid' });
       }
 
+      // calculating new cost if time was updated
       const costArray = await Artwork.find(
         { _id: { $in: exampleArtwork } },
         'cost -_id'
@@ -158,6 +163,7 @@ router.put(
           return acc + cur.cost;
         }, 0) / costArray.length;
 
+      // CREATING TAGS
       if (tags.length > 0) {
         // find existing tags
         const findTags = await Tag.find({ tagName: tags });
@@ -183,6 +189,7 @@ router.put(
           await Tag.create(newTags);
         }
 
+        // UPDATING TAGS
         const commissionTagsArr = await Tag.find({ tagName: tags });
         const tagsId = commissionTagsArr.map(tag => {
           return tag._id;
@@ -198,11 +205,13 @@ router.put(
         );
       }
 
+      // creating new tags array to send to updated commission
       const commissionTagsArr = await Tag.find({ tagName: tags });
       const commissionTags = commissionTagsArr.map(tag => {
         return tag._id;
       });
 
+      // updating artwork in case artwork was added or removed from commission
       if (exampleArtwork) {
         await Artwork.updateMany(
           { _id: { $nin: exampleArtwork } },
@@ -260,9 +269,10 @@ router.delete(
       // delete from commission
       await Artwork.updateMany({ $pull: { commissions: id } });
 
-      // delete from comissions
+      // delete from tags
       await Tag.updateMany({ $pull: { commissions: id } });
 
+      // delete commission
       await Commission.findByIdAndDelete(id);
 
       res.json({ message: 'Commission deleted successfully' });
