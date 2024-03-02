@@ -61,6 +61,13 @@
 | GET    | /api/ratings/:id | Returns the specified rating |
 | POST   | /api/ratings     | Creates a new rating         |
 
+### Tag Routes
+
+| Method | Route         | Description               |
+| ------ | ------------- | ------------------------- |
+| GET    | /api/tags     | Returns all tags          |
+| GET    | /api/tags/:id | Returns the specified tag |
+
 ## Models
 
 ### User Model
@@ -112,7 +119,7 @@
       type: String,
       required: [true, 'Image is required'],
     },
-    tags: [{ type: String }],
+    tags: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],
     time: Number,
     cost: Number,
     artist: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -129,7 +136,7 @@
       required: [true, 'Title is required.'],
     },
     description: String,
-    tags: [{ type: String }],
+    tags: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],
     exampleArtwork: [{ type: Schema.Types.ObjectId, ref: 'Artwork' }],
     cost: Number,
     artist: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -171,5 +178,15 @@
       required: [true, 'You need to submit a rating'],
     },
     comment: String,
+  }
+```
+
+### Tag Model
+
+```js
+{
+    tagName: { type: String, required: true, lowercase: true },
+    artwork: [{ type: Schema.Types.ObjectId, ref: 'Artwork' }],
+    commissions: [{ type: Schema.Types.ObjectId, ref: 'Commission' }],
   }
 ```

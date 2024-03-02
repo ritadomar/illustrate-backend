@@ -31,6 +31,8 @@ const requestsRoutes = require('./routes/requests.routes');
 app.use('/api', isAuthenticated, requestsRoutes);
 const ratingsRoutes = require('./routes/ratings.routes');
 app.use('/api', ratingsRoutes);
+const tagsRoutes = require('./routes/tags.routes');
+app.use('/api', tagsRoutes);
 
 // auth routes
 const authRoutes = require('./routes/auth.routes');
