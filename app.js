@@ -27,12 +27,12 @@ const artworksRoutes = require('./routes/artworks.routes');
 app.use('/api', artworksRoutes);
 const commissionsRoutes = require('./routes/commissions.routes');
 app.use('/api', commissionsRoutes);
-const requestsRoutes = require('./routes/requests.routes');
-app.use('/api', isAuthenticated, requestsRoutes);
 const ratingsRoutes = require('./routes/ratings.routes');
 app.use('/api', ratingsRoutes);
 const tagsRoutes = require('./routes/tags.routes');
 app.use('/api', tagsRoutes);
+const requestsRoutes = require('./routes/requests.routes');
+app.use('/api', isAuthenticated, requestsRoutes);
 
 // auth routes
 const authRoutes = require('./routes/auth.routes');

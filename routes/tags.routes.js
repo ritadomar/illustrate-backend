@@ -1,12 +1,11 @@
 const router = require('express').Router();
 const Tag = require('../models/Tag.model');
 const mongoose = require('mongoose');
-const { isAuthenticated } = require('../middleware/jwt.middleware');
 
 // Read all tags
 router.get('/tags', async (req, res, next) => {
   try {
-    const allTags = await Tag.find({});
+    const allTags = await Tag.find({}).populate(['artwork', 'commissions']);
 
     console.log('All tags', allTags);
     res.json(allTags);
