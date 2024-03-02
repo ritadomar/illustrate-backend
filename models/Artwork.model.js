@@ -12,7 +12,7 @@ const artworkSchema = new Schema(
       type: String,
       required: [true, 'Image is required'],
     },
-    tags: [{ type: String }],
+    tags: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],
     time: Number,
     cost: Number,
     artist: { type: Schema.Types.ObjectId, ref: 'User' },

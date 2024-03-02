@@ -8,7 +8,7 @@ const commissionSchema = new Schema(
       required: [true, 'Title is required.'],
     },
     description: String,
-    tags: [{ type: String }],
+    tags: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],
     exampleArtwork: [{ type: Schema.Types.ObjectId, ref: 'Artwork' }],
     cost: Number,
     artist: { type: Schema.Types.ObjectId, ref: 'User' },

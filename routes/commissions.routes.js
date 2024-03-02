@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const Artwork = require('../models/Artwork.model');
 const Artist = require('../models/User.model');
+const Tag = require('../models/Tag.model');
 const Commission = require('../models/Commission.model');
 const mongoose = require('mongoose');
 const { checkArtist } = require('../middleware/artistCheck.middleware');
@@ -25,10 +26,41 @@ router.post(
           return acc + cur.cost;
         }, 0) / costArray.length;
 
+      if (tags.length > 0) {
+        // find existing tags
+        const findTags = await Tag.find({ tagName: tags });
+
+        // adds all tags as new
+        if (findTags.length === 0) {
+          const tagName = [...tags].map(tag => {
+            return { tagName: tag };
+          });
+          await Tag.create(tagName);
+        } else {
+          // filters the ones that are new
+          const newTags = [...tags]
+            .filter(tag => {
+              const oldTags = findTags.map(tag => {
+                return tag.tagName;
+              });
+              return oldTags.indexOf(tag) < 0;
+            })
+            .map(tag => {
+              return { tagName: tag };
+            });
+          await Tag.create(newTags);
+        }
+      }
+
+      const commissionTagsArr = await Tag.find({ tagName: tags });
+      const commissionTags = commissionTagsArr.map(tag => {
+        return tag._id;
+      });
+
       const newCommission = await Commission.create({
         title,
         description,
-        tags,
+        tags: commissionTags,
         exampleArtwork,
         cost,
         artist: artistId,
@@ -39,6 +71,13 @@ router.post(
         // $push: {name of property we are pushing to: what we are pushing}
         $push: { commissions: newCommission._id },
       });
+
+      if (tags.length > 0) {
+        await Tag.updateMany(
+          { tagName: { $in: tags } },
+          { $addToSet: { commissions: newCommission._id } }
+        );
+      }
 
       if (exampleArtwork) {
         await Artwork.updateMany(
@@ -80,7 +119,10 @@ router.get('/commissions/:id', async (req, res, next) => {
       return res.status(400).json({ message: 'Id is not valid' });
     }
 
-    const commission = await Commission.findById(id).populate('exampleArtwork');
+    const commission = await Commission.findById(id).populate([
+      'exampleArtwork',
+      'tags',
+    ]);
 
     if (!commission) {
       return res.status(404).json({ message: 'No commission found' });
@@ -110,11 +152,56 @@ router.put(
         { _id: { $in: exampleArtwork } },
         'cost -_id'
       );
-
+      console.log(costArray);
       const cost =
         costArray.reduce((acc, cur) => {
           return acc + cur.cost;
         }, 0) / costArray.length;
+
+      if (tags.length > 0) {
+        // find existing tags
+        const findTags = await Tag.find({ tagName: tags });
+
+        // adds all tags as new
+        if (findTags.length === 0) {
+          const tagName = [...tags].map(tag => {
+            return { tagName: tag };
+          });
+          await Tag.create(tagName);
+        } else {
+          // filters the ones that are new
+          const newTags = [...tags]
+            .filter(tag => {
+              const oldTags = findTags.map(tag => {
+                return tag.tagName;
+              });
+              return oldTags.indexOf(tag) < 0;
+            })
+            .map(tag => {
+              return { tagName: tag };
+            });
+          await Tag.create(newTags);
+        }
+
+        const commissionTagsArr = await Tag.find({ tagName: tags });
+        const tagsId = commissionTagsArr.map(tag => {
+          return tag._id;
+        });
+
+        await Tag.updateMany(
+          { _id: { $nin: tagsId } },
+          { $pull: { commissions: id } }
+        );
+        await Tag.updateMany(
+          { _id: { $in: tagsId } },
+          { $addToSet: { commissions: id } }
+        );
+      }
+
+      const commissionTagsArr = await Tag.find({ tagName: tags });
+      const commissionTags = commissionTagsArr.map(tag => {
+        return tag._id;
+      });
 
       if (exampleArtwork) {
         await Artwork.updateMany(
@@ -132,13 +219,13 @@ router.put(
         {
           title,
           description,
-          tags,
+          tags: commissionTags,
           exampleArtwork,
           cost,
           artist: artistId,
         },
         { new: true }
-      ).populate('exampleArtwork');
+      ).populate(['exampleArtwork', 'tags']);
 
       if (!updatedCommission) {
         return res.status(404).json({ message: 'Commission not found' });
@@ -172,6 +259,9 @@ router.delete(
 
       // delete from commission
       await Artwork.updateMany({ $pull: { commissions: id } });
+
+      // delete from comissions
+      await Tag.updateMany({ $pull: { commissions: id } });
 
       await Commission.findByIdAndDelete(id);
 
