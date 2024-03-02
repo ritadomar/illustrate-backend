@@ -29,6 +29,8 @@ const commissionsRoutes = require('./routes/commissions.routes');
 app.use('/api', commissionsRoutes);
 const requestsRoutes = require('./routes/requests.routes');
 app.use('/api', isAuthenticated, requestsRoutes);
+const ratingsRoutes = require('./routes/ratings.routes');
+app.use('/api', ratingsRoutes);
 
 // auth routes
 const authRoutes = require('./routes/auth.routes');

@@ -8,7 +8,7 @@ const fileUploader = require('../config/cloudinary.config');
 const { isAuthenticated } = require('../middleware/jwt.middleware');
 
 // Read one profile by id
-router.get('/profile/:id', async (req, res, next) => {
+router.get('/profiles/:id', async (req, res, next) => {
   const { id } = req.params;
 
   try {
@@ -16,7 +16,11 @@ router.get('/profile/:id', async (req, res, next) => {
       return res.status(400).json({ message: 'Id is not valid' });
     }
 
-    const user = await User.findById(id).populate(['artwork', 'commissions']);
+    const user = await User.findById(id).populate([
+      'artwork',
+      'commissions',
+      'ratings',
+    ]);
 
     if (!user || user.length === 0) {
       return res.status(404).json({ message: 'No user found' });
@@ -30,7 +34,7 @@ router.get('/profile/:id', async (req, res, next) => {
 });
 
 // Update profile by id
-router.put('/profile/:id', isAuthenticated, async (req, res, next) => {
+router.put('/profiles/:id', isAuthenticated, async (req, res, next) => {
   const { id } = req.params;
   const { name, avatarUrl, portfolio, isArtist, rate } = req.body;
 
@@ -56,7 +60,7 @@ router.put('/profile/:id', isAuthenticated, async (req, res, next) => {
   }
 });
 
-router.delete('/profile/:id', isAuthenticated, async (req, res, next) => {
+router.delete('/profiles/:id', isAuthenticated, async (req, res, next) => {
   const { id } = req.params;
 
   try {

@@ -12,42 +12,54 @@
 
 ### Artist Routes
 
-| Method | Route            | Description                  |
-| ------ | ---------------- | ---------------------------- |
-| GET    | /api/artists     | Returns all artists          |
-| GET    | /api/artists/:id | Returns the specified artist |
-| PUT    | /api/artists/:id | Edits the artist profile     |
-| DELETE | /api/artists/:id | Deletes the artist profile   |
+| Method | Route        | Description         |
+| ------ | ------------ | ------------------- |
+| GET    | /api/artists | Returns all artists |
 
 ### Artwork Routes
 
-| Method | Route            | Description                   |
-| ------ | ---------------- | ----------------------------- |
-| GET    | /api/artwork     | Returns all artwork           |
-| GET    | /api/artwork/:id | Returns the specified artwork |
-| POST   | /api/artwork     | Creates a new artwork         |
-| PUT    | /api/artwork/:id | Edits the specified artwork   |
-| DELETE | /api/artwork/:id | Deletes the specified artwork |
+| Method | Route             | Description                   |
+| ------ | ----------------- | ----------------------------- |
+| GET    | /api/artworks     | Returns all artwork           |
+| GET    | /api/artworks/:id | Returns the specified artwork |
+| POST   | /api/artworks     | Creates a new artwork         |
+| PUT    | /api/artworks/:id | Edits the specified artwork   |
+| DELETE | /api/artworks/:id | Deletes the specified artwork |
 
 ### Commission Routes
 
-| Method | Route               | Description                      |
-| ------ | ------------------- | -------------------------------- |
-| GET    | /api/commission     | Returns all commissions          |
-| GET    | /api/commission/:id | Returns the specified commission |
-| POST   | /api/commission     | Creates a new commission         |
-| PUT    | /api/commission/:id | Edits the specified commission   |
-| DELETE | /api/commission/:id | Deletes the specified commission |
+| Method | Route                | Description                      |
+| ------ | -------------------- | -------------------------------- |
+| GET    | /api/commissions     | Returns all commissions          |
+| GET    | /api/commissions/:id | Returns the specified commission |
+| POST   | /api/commissions     | Creates a new commission         |
+| PUT    | /api/commissions/:id | Edits the specified commission   |
+| DELETE | /api/commissions/:id | Deletes the specified commission |
+
+### Profile Routes
+
+| Method | Route             | Description                   |
+| ------ | ----------------- | ----------------------------- |
+| GET    | /api/profiles/:id | Returns the specified profile |
+| PUT    | /api/profiles/:id | Edits the profile             |
+| DELETE | /api/profiles/:id | Deletes the artist profile    |
 
 ### Request Routes
 
-| Method | Route            | Description                   |
-| ------ | ---------------- | ----------------------------- |
-| GET    | /api/request     | Returns all requests          |
-| GET    | /api/request/:id | Returns the specified request |
-| POST   | /api/request     | Creates a new request         |
-| PUT    | /api/request/:id | Edits the specified request   |
-| DELETE | /api/request/:id | Deletes the specified request |
+| Method | Route             | Description                   |
+| ------ | ----------------- | ----------------------------- |
+| GET    | /api/requests     | Returns all requests          |
+| GET    | /api/requests/:id | Returns the specified request |
+| POST   | /api/requests     | Creates a new request         |
+| PUT    | /api/requests/:id | Edits the specified request   |
+| DELETE | /api/requests/:id | Deletes the specified request |
+
+### Rating Routes
+
+| Method | Route            | Description                  |
+| ------ | ---------------- | ---------------------------- |
+| GET    | /api/ratings/:id | Returns the specified rating |
+| POST   | /api/ratings     | Creates a new rating         |
 
 ## Models
 
@@ -77,11 +89,13 @@
     },
     avatarUrl: String,
     portfolio: String,
-    isArtist: Boolean,
+    isArtist: { type: Boolean, default: false },
     rate: Number,
     artwork: [{ type: Schema.Types.ObjectId, ref: 'Artwork' }],
-    commissions: [{ type: Schema.Types.ObjectId, ref: 'Commissions' }],
-    requests: [{ type: Schema.Types.ObjectId, ref: 'Requests' }],
+    commissions: [{ type: Schema.Types.ObjectId, ref: 'Commission' }],
+    requests: [{ type: Schema.Types.ObjectId, ref: 'Request' }],
+    ratings: [{ type: Schema.Types.ObjectId, ref: 'Rating' }],
+    avgRating: { type: Number, default: 0 },
   }
 ```
 
@@ -89,20 +103,21 @@
 
 ```js
 {
-  {
     title: {
       type: String,
       required: [true, 'Title is required.'],
     },
     description: String,
-    artworkUrl: String,
+    artworkUrl: {
+      type: String,
+      required: [true, 'Image is required'],
+    },
     tags: [{ type: String }],
     time: Number,
     cost: Number,
     artist: { type: Schema.Types.ObjectId, ref: 'User' },
-    commissions: { type: Schema.Types.ObjectId, ref: 'Commissions' },
+    commissions: [{ type: Schema.Types.ObjectId, ref: 'Commission' }],
   }
-}
 ```
 
 ### Commission Model
@@ -116,9 +131,9 @@
     description: String,
     tags: [{ type: String }],
     exampleArtwork: [{ type: Schema.Types.ObjectId, ref: 'Artwork' }],
-    artist: { type: Schema.Types.ObjectId, ref: 'User' },
     cost: Number,
-    requests: [{ type: Schema.Types.ObjectId, ref: 'Requests' }],
+    artist: { type: Schema.Types.ObjectId, ref: 'User' },
+    requests: [{ type: Schema.Types.ObjectId, ref: 'Request' }],
   }
 ```
 
@@ -128,7 +143,7 @@
 {
     artist: { type: Schema.Types.ObjectId, ref: 'User' },
     buyer: { type: Schema.Types.ObjectId, ref: 'User' },
-    commission: { type: Schema.Types.ObjectId, ref: 'Requests' },
+    commission: { type: Schema.Types.ObjectId, ref: 'Commission' },
     description: {
       type: String,
       required: [
@@ -136,6 +151,25 @@
         'Description is required. Please provide as much useful information about the specs of the project, including size, purpose, media, and deadline',
       ],
     },
-    status: { type: String, enum: ['pending', 'approved', 'rejected'] },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
+  },
+```
+
+### Rating Model
+
+```js
+{
+    giver: { type: Schema.Types.ObjectId, ref: 'User' },
+    receiver: { type: Schema.Types.ObjectId, ref: 'User' },
+    rating: {
+      type: Number,
+      max: 5,
+      required: [true, 'You need to submit a rating'],
+    },
+    comment: String,
   }
 ```

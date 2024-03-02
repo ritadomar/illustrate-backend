@@ -25,11 +25,13 @@ const userSchema = new Schema(
     },
     avatarUrl: String,
     portfolio: String,
-    isArtist: Boolean,
+    isArtist: { type: Boolean, default: false },
     rate: Number,
     artwork: [{ type: Schema.Types.ObjectId, ref: 'Artwork' }],
     commissions: [{ type: Schema.Types.ObjectId, ref: 'Commission' }],
     requests: [{ type: Schema.Types.ObjectId, ref: 'Request' }],
+    ratings: [{ type: Schema.Types.ObjectId, ref: 'Rating' }],
+    avgRating: { type: Number, default: 0 },
   },
   {
     // this second object adds extra properties: `createdAt` and `updatedAt`

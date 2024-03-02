@@ -5,7 +5,9 @@ const Artist = require('../models/User.model');
 router.get('/artists', async (req, res, next) => {
   console.log(req.headers);
   try {
-    const allArtists = await Artist.find({ isArtist: true });
+    const allArtists = await Artist.find({ isArtist: true }).populate(
+      'avgRating'
+    );
 
     console.log('All artists', allArtists);
     res.json(allArtists);
