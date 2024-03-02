@@ -1,5 +1,5 @@
 const checkArtist = (req, res, next) => {
-  if (req.payload.isArtist) {
+  if (req.payload.isArtist && req.payload._id === req.body.artistId) {
     return next();
   }
   res.status(403).json({ message: 'Artist access required' });
