@@ -153,16 +153,19 @@ router.put(
       }
 
       // calculating new cost if time was updated
-      const costArray = await Artwork.find(
-        { _id: { $in: exampleArtwork } },
-        'cost -_id'
-      );
-      console.log(costArray);
-      const cost =
-        costArray.reduce((acc, cur) => {
-          return acc + cur.cost;
-        }, 0) / costArray.length;
-
+      let cost;
+      if (exampleArtwork.length > 0) {
+        const costArray = await Artwork.find(
+          { _id: { $in: exampleArtwork } },
+          'cost -_id'
+        );
+        cost =
+          costArray.reduce((acc, cur) => {
+            return acc + cur.cost;
+          }, 0) / costArray.length;
+      } else {
+        cost = 0;
+      }
       // CREATING TAGS
       if (tags.length > 0) {
         // find existing tags
@@ -257,13 +260,14 @@ router.delete(
     const { id } = req.params;
 
     try {
+      const artist = await Commission.findById(id, 'artist -_id');
+      const artistId = artist.artist.toString();
+
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: 'Id is not valid' });
       }
 
       // delete from artist
-      const artist = await Commission.findById(id, 'artist -_id');
-      const artistId = artist.artist.toString();
       await Artist.findByIdAndUpdate(artistId, { $pull: { commissions: id } });
 
       // delete from commission

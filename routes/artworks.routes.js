@@ -261,10 +261,10 @@ router.delete(
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ message: 'Id is not valid' });
       }
-
-      // delete from artist
       const artist = await Artwork.findById(id, 'artist -_id');
       const artistId = artist.artist.toString();
+
+      // delete from artist
       await Artist.findByIdAndUpdate(artistId, { $pull: { artwork: id } });
 
       // delete from commission

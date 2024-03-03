@@ -43,12 +43,36 @@ router.put('/profiles/:id', isAuthenticated, async (req, res, next) => {
       return res.status(400).json({ message: 'Id is not valid' });
     }
 
+    const hasUploads = await User.findById(id, 'artwork commissions -_id');
+    if (hasUploads.artwork.length > 0) {
+      await Artwork.updateMany({ artist: id }, [
+        { $set: { cost: { $multiply: [{ $toDecimal: '$time' }, rate] } } },
+      ]);
+    }
+
+    if (hasUploads.commissions.length > 0) {
+      const oldRate = await User.findById(id, 'rate -_id');
+      console.log(oldRate);
+
+      await Commission.updateMany({ artist: id }, [
+        {
+          $set: {
+            cost: {
+              $divide: [
+                { $multiply: [rate, { $toDecimal: '$cost' }] },
+                oldRate.rate,
+              ],
+            },
+          },
+        },
+      ]);
+    }
+
     const updatedProfile = await User.findByIdAndUpdate(
       id,
       { name, avatarUrl, portfolio, isArtist, rate },
       { new: true }
     );
-
     if (!updatedProfile) {
       return res.status(404).json({ message: 'Artist not found' });
     }
