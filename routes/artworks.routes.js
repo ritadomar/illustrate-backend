@@ -238,6 +238,38 @@ router.put(
         { new: true }
       ).populate(['commissions', 'tags']);
 
+      // UPDATING COMMISSION COST
+      if (time) {
+        const artworkCommissions = await Commission.find(
+          {
+            exampleArtwork: id,
+          },
+          'exampleArtwork'
+        ).populate('exampleArtwork');
+
+        // const commissions
+        const newCost = artworkCommissions.map(commission => {
+          const artworkCost = commission.exampleArtwork.map(artwork => {
+            console.log('cost', artwork.cost, typeof artwork.cost);
+            return artwork.cost;
+          });
+          const cost =
+            artworkCost.reduce((acc, cur) => {
+              return acc + cur;
+            }) / artworkCost.length;
+          return { id: commission._id, cost };
+        });
+
+        const updateCost = newCost.map(commission => {
+          return Commission.findByIdAndUpdate(commission.id, {
+            cost: commission.cost,
+          });
+        });
+
+        await Promise.all(updateCost);
+        // console.log(artworkCommissions);
+      }
+
       if (!updatedArtwork) {
         return res.status(404).json({ message: 'Artwork not found' });
       }
