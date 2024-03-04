@@ -51,21 +51,28 @@ router.put('/profiles/:id', isAuthenticated, async (req, res, next) => {
     }
 
     if (hasUploads.commissions.length > 0) {
-      const oldRate = await User.findById(id, 'rate -_id');
-      console.log(oldRate);
+      const artistCommissions = await Commission.find({ artist: id }).populate(
+        'exampleArtwork'
+      );
 
-      await Commission.updateMany({ artist: id }, [
-        {
-          $set: {
-            cost: {
-              $divide: [
-                { $multiply: [rate, { $toDecimal: '$cost' }] },
-                oldRate.rate,
-              ],
-            },
-          },
-        },
-      ]);
+      const newCost = artistCommissions.map(commission => {
+        const artworkCost = commission.exampleArtwork.map(artwork => {
+          return artwork.cost;
+        });
+        const cost =
+          artworkCost.reduce((acc, cur) => {
+            return acc + cur;
+          }) / artworkCost.length;
+        return { id: commission._id, cost };
+      });
+
+      const updateCost = newCost.map(commission => {
+        return Commission.findByIdAndUpdate(commission.id, {
+          cost: commission.cost,
+        });
+      });
+
+      await Promise.all(updateCost);
     }
 
     const updatedProfile = await User.findByIdAndUpdate(
