@@ -4,7 +4,6 @@ const Artwork = require('../models/Artwork.model');
 const Commission = require('../models/Commission.model');
 const Request = require('../models/Request.model');
 const mongoose = require('mongoose');
-const fileUploader = require('../config/cloudinary.config');
 const { isAuthenticated } = require('../middleware/jwt.middleware');
 
 // Read one profile by id
@@ -109,17 +108,6 @@ router.delete('/profiles/:id', isAuthenticated, async (req, res, next) => {
   } catch (error) {
     console.log('An error occurred deleting the account', error);
     next(error);
-  }
-});
-
-// promise is handled by the middleware, we don't need async
-// we're sending a status already, no need for next
-router.post('/upload', fileUploader.single('file'), (req, res) => {
-  try {
-    res.status(200).json({ avatarUrl: req.file.path });
-  } catch (error) {
-    console.log('An error occurred uploading the image', error);
-    res.status(500).json({ message: 'An error occurred' });
   }
 });
 

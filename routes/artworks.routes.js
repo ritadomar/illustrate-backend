@@ -4,7 +4,6 @@ const Artist = require('../models/User.model');
 const Commission = require('../models/Commission.model');
 const Tag = require('../models/Tag.model');
 const mongoose = require('mongoose');
-const fileUploader = require('../config/cloudinary.config');
 const { checkArtist } = require('../middleware/artistCheck.middleware');
 const { isAuthenticated } = require('../middleware/jwt.middleware');
 
@@ -315,16 +314,5 @@ router.delete(
     }
   }
 );
-
-// promise is handled by the middleware, we don't need async
-// we're sending a status already, no need for next
-router.post('/upload', fileUploader.single('file'), (req, res) => {
-  try {
-    res.status(200).json({ artworkUrl: req.file.path });
-  } catch (error) {
-    console.log('An error occurred uploading the image', error);
-    res.status(500).json({ message: 'An error occurred' });
-  }
-});
 
 module.exports = router;
