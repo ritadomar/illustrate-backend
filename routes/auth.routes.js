@@ -106,6 +106,7 @@ router.post('/login', async (req, res, next) => {
         email: user.email,
         username: user.username,
         isArtist: user.isArtist,
+        avatarUrl: user.avatarUrl,
       };
 
       const authToken = jwt.sign(payload, process.env.TOKEN_SECRET, {
