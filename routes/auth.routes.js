@@ -48,6 +48,14 @@ router.post('/signup', async (req, res, next) => {
       });
     }
 
+    const usernameExists = await User.findOne({ username });
+
+    if (usernameExists) {
+      return res.status(400).json({
+        message: 'The provided username is already exists',
+      });
+    }
+
     // Encrypt the password
     const salt = bcrypt.genSaltSync(saltRounds);
     const hashedPassword = bcrypt.hashSync(password, salt);
