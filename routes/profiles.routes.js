@@ -11,9 +11,10 @@ const { isAuthenticated } = require('../middleware/jwt.middleware');
 // Read one profile by id
 router.get('/profiles/:username', async (req, res, next) => {
   const { username } = req.params;
+  console.log(username);
 
   try {
-    const user = await User.find({ username }).populate([
+    const user = await User.findOne({ username }).populate([
       'artwork',
       'commissions',
       'ratings',

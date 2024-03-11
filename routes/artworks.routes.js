@@ -107,7 +107,7 @@ router.post(
 // Read all artworks
 router.get('/artworks', async (req, res, next) => {
   try {
-    const allArtworks = await Artwork.find({});
+    const allArtworks = await Artwork.find({}).populate('artist');
 
     console.log('All artworks', allArtworks);
     res.json(allArtworks);
@@ -129,6 +129,7 @@ router.get('/artworks/:id', async (req, res, next) => {
     const artwork = await Artwork.findById(id).populate([
       'commissions',
       'tags',
+      'artist',
     ]);
 
     if (!artwork) {
