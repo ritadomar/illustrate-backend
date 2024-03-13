@@ -7,7 +7,6 @@ router.get('/tags', async (req, res, next) => {
   try {
     const allTags = await Tag.find({}).populate(['artwork', 'commissions']);
 
-    console.log('All tags', allTags);
     res.json(allTags);
   } catch (error) {
     console.log('An error ocurred getting all tags', error);
