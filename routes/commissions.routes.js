@@ -126,6 +126,7 @@ router.get('/commissions/:id', async (req, res, next) => {
     const commission = await Commission.findById(id).populate([
       'exampleArtwork',
       'tags',
+      'artist',
     ]);
 
     if (!commission) {
