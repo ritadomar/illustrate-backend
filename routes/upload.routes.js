@@ -8,6 +8,7 @@ router.post('/upload', fileUploader.single('file'), (req, res) => {
     res.status(200).json({ imgUrl: req.file.path });
   } catch (error) {
     console.log('An error occurred uploading the image', error);
+    next(error);
     res.status(500).json({ message: 'An error occurred' });
   }
 });
