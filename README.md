@@ -1,4 +1,11 @@
-# Project Management Server
+# Illlu
+
+## About the project
+
+Illlu is a website for illustrators and art lovers. Illustrators often struggle with pricing their work and pricing it fairly. That's where Illlu helps.
+When you register as an illustrator, you'll need to submit your hourly rate. If you're unsure, we suggest a minimum hourly rate to help! Every time you upload an illustration, you'll need to submit the number of hours you spent on that illustration, including any time spent discussing details with your client if it applies. With this information, Illlu can calculate the cost for every single artwork you submit.
+On Illlu, you can bundle different illustrations into commission packs so art lovers can find your work and hire you. Every commission price is calculated by creating an average of the prices each of its artworks costs, making it easy to ask for a fair price.
+Finally, no matter if you're an illustrator or an art lover, you can just use Illlu to explore different illustrations and commissions, the perfect place for inspiration!
 
 ## Routes
 
@@ -38,11 +45,18 @@
 
 ### Profile Routes
 
-| Method | Route             | Description                   |
-| ------ | ----------------- | ----------------------------- |
-| GET    | /api/profiles/:id | Returns the specified profile |
-| PUT    | /api/profiles/:id | Edits the profile             |
-| DELETE | /api/profiles/:id | Deletes the artist profile    |
+| Method | Route                   | Description                   |
+| ------ | ----------------------- | ----------------------------- |
+| GET    | /api/profiles/:username | Returns the specified profile |
+| PUT    | /api/profiles/:username | Edits the profile             |
+| DELETE | /api/profiles/:username | Deletes the artist profile    |
+
+### Rating Routes
+
+| Method | Route            | Description                  |
+| ------ | ---------------- | ---------------------------- |
+| GET    | /api/ratings/:id | Returns the specified rating |
+| POST   | /api/ratings     | Creates a new rating         |
 
 ### Request Routes
 
@@ -54,19 +68,12 @@
 | PUT    | /api/requests/:id | Edits the specified request   |
 | DELETE | /api/requests/:id | Deletes the specified request |
 
-### Rating Routes
-
-| Method | Route            | Description                  |
-| ------ | ---------------- | ---------------------------- |
-| GET    | /api/ratings/:id | Returns the specified rating |
-| POST   | /api/ratings     | Creates a new rating         |
-
 ### Tag Routes
 
-| Method | Route         | Description               |
-| ------ | ------------- | ------------------------- |
-| GET    | /api/tags     | Returns all tags          |
-| GET    | /api/tags/:id | Returns the specified tag |
+| Method | Route              | Description               |
+| ------ | ------------------ | ------------------------- |
+| GET    | /api/tags          | Returns all tags          |
+| GET    | /api/tags/:tagName | Returns the specified tag |
 
 ## Models
 
@@ -144,6 +151,21 @@
   }
 ```
 
+### Rating Model
+
+```js
+{
+    giver: { type: Schema.Types.ObjectId, ref: 'User' },
+    receiver: { type: Schema.Types.ObjectId, ref: 'User' },
+    rating: {
+      type: Number,
+      max: 5,
+      required: [true, 'You need to submit a rating'],
+    },
+    comment: String,
+  }
+```
+
 ### Request Model
 
 ```js
@@ -160,25 +182,10 @@
     },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['pending', 'approved', 'rejected', 'canceled', 'completed'],
       default: 'pending',
     },
   },
-```
-
-### Rating Model
-
-```js
-{
-    giver: { type: Schema.Types.ObjectId, ref: 'User' },
-    receiver: { type: Schema.Types.ObjectId, ref: 'User' },
-    rating: {
-      type: Number,
-      max: 5,
-      required: [true, 'You need to submit a rating'],
-    },
-    comment: String,
-  }
 ```
 
 ### Tag Model
@@ -190,3 +197,18 @@
     commissions: [{ type: Schema.Types.ObjectId, ref: 'Commission' }],
   }
 ```
+
+## Packages
+
+- Cloudinary
+- CORS
+- Express
+- Mongoose
+- Morgan
+- Multer
+- Nodemon
+
+## Links
+
+- [Client repo](https://github.com/ritadomar/illustrate)
+- [Deployed website](https://illlu.netlify.app/)
