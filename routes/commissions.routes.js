@@ -103,7 +103,11 @@ router.post(
 // Read all commissions
 router.get('/commissions', async (req, res, next) => {
   try {
-    const allCommissions = await Commission.find({});
+    const allCommissions = await Commission.find({}).populate([
+      'artist',
+      'exampleArtwork',
+      'tags',
+    ]);
 
     console.log('All commissions', allCommissions);
     res.json(allCommissions);

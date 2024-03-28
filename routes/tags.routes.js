@@ -14,19 +14,19 @@ router.get('/tags', async (req, res, next) => {
   }
 });
 
-// Read one tag by id
-router.get('/tags/:id', async (req, res, next) => {
-  const { id } = req.params;
+// Read one tag by name
+router.get('/tags/:tagName', async (req, res, next) => {
+  const { tagName } = req.params;
 
   try {
+    const tag = await Tag.findOne({ tagName });
+
     // check if id is a valid value in our db
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(tag._id)) {
       return res.status(400).json({ message: 'Id is not valid' });
     }
 
-    const tag = await Tag.findById(id).populate(['commissions', 'artwork']);
-
-    if (!tag) {
+    if (!tag || tag.length === 0) {
       return res.status(404).json({ message: 'No tag found' });
     }
     res.json(tag);
