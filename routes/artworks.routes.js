@@ -107,7 +107,7 @@ router.post(
 // Read all artworks
 router.get('/artworks', async (req, res, next) => {
   try {
-    const allArtworks = await Artwork.find({}).populate('artist');
+    const allArtworks = await Artwork.find({}).populate(['artist', 'tags']);
 
     console.log('All artworks', allArtworks);
     res.json(allArtworks);
