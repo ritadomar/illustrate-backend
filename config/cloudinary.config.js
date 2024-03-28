@@ -15,6 +15,15 @@ const storage = new CloudinaryStorage({
   params: {
     allowed_formats: ['jpg', 'png', 'gif', 'tiff', 'jpeg', 'svg'],
     folder: 'illustrate', // name of folder in cloudinary
+    format: 'auto',
+    quality: 'auto',
+    transformation: [
+      { quality: 'auto' },
+      { fetch_format: 'auto' },
+      { height: 2000 },
+      { width: 2000 },
+      { crop: 'limit' },
+    ],
   },
 });
 
