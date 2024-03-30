@@ -41,8 +41,9 @@ router.post('/requests', async (req, res, next) => {
 });
 
 // Read all requests
-router.get('/requests', async (req, res, next) => {
-  const { userId } = req.body;
+router.get('/requests/user/:userId', async (req, res, next) => {
+  const { userId } = req.params;
+  console.log(userId);
 
   try {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -50,7 +51,7 @@ router.get('/requests', async (req, res, next) => {
     }
     const allRequests = await Request.find({
       $or: [{ artist: userId }, { buyer: userId }],
-    });
+    }).populate(['buyer', 'commission', 'artist']);
 
     console.log('All requests', allRequests);
     res.json(allRequests);
